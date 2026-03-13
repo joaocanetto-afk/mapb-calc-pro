@@ -1,0 +1,18 @@
+{
+  "name": "Calculadora Comercial de Plásticos Industriais",
+  "short_name": "Calculadora Plásticos",
+  "description": "Calculadora comercial para tarugos e placas plásticas industriais",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#1a7a5a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
