@@ -1,4 +1,4 @@
-import { classifyDiameterRange, classifyLengthType, type DiameterRange, type LengthType } from "@/utils/classifiers";
+import { classifyDiameterRange, classifyCommercialType, type DiameterRange, type CommercialType, type PricingMode } from "@/utils/classifiers";
 import { getActivePricingRules, type PricingRule } from "@/data/pricingRules";
 import { getMaterialByCode } from "@/data/materials";
 import { calculateTarugoWeightKg } from "./tarugoCalculator";
@@ -17,28 +17,29 @@ export interface TarugoCalculationResult {
   length: number;
   quantity: number;
   diameterRange: DiameterRange;
-  lengthType: LengthType;
+  commercialType: CommercialType;
+  pricingMode: PricingMode | null;
   unitWeightKg: number;
   totalWeightKg: number;
   pricePerKg: number | null;
   unitPrice: number | null;
   totalPrice: number | null;
   ruleDescription: string | null;
-  warning: string | null;
+  statusMessage: string;
 }
 
 export function getApplicablePricingRule(
   materialCode: string,
   diameter: number,
   length: number
-): { rule: PricingRule | null; diameterRange: DiameterRange; lengthType: LengthType } {
+): { rule: PricingRule | null; diameterRange: DiameterRange; commercialType: CommercialType } {
   const diameterRange = classifyDiameterRange(diameter);
-  const lengthType = classifyLengthType(length);
+  const commercialType = classifyCommercialType(length);
   const rules = getActivePricingRules();
   const rule = rules.find(
-    (r) => r.materialCode === materialCode && r.diameterRange === diameterRange && r.lengthType === lengthType
+    (r) => r.materialCode === materialCode && r.diameterRange === diameterRange && r.commercialType === commercialType
   ) ?? null;
-  return { rule, diameterRange, lengthType };
+  return { rule, diameterRange, commercialType };
 }
 
 export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalculationResult {
@@ -47,7 +48,7 @@ export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalcu
     throw new Error("Material não encontrado.");
   }
 
-  const { rule, diameterRange, lengthType } = getApplicablePricingRule(
+  const { rule, diameterRange, commercialType } = getApplicablePricingRule(
     input.materialCode,
     input.diameter,
     input.length
@@ -60,15 +61,29 @@ export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalcu
   let unitPrice: number | null = null;
   let totalPrice: number | null = null;
   let ruleDescription: string | null = null;
-  let warning: string | null = null;
+  let pricingMode: PricingMode | null = null;
+  let statusMessage: string;
 
-  if (rule) {
-    pricePerKg = rule.pricePerKg;
-    unitPrice = unitWeightKg * pricePerKg;
-    totalPrice = unitPrice * input.quantity;
-    ruleDescription = rule.description;
+  if (!rule) {
+    statusMessage = "Preço não cadastrado para esta combinação.";
   } else {
-    warning = "Preço não cadastrado para esta combinação de faixa de diâmetro e comprimento.";
+    pricingMode = rule.pricingMode;
+    ruleDescription = rule.description;
+
+    switch (rule.pricingMode) {
+      case "FIXED_PRICE":
+        pricePerKg = rule.pricePerKg;
+        unitPrice = unitWeightKg * pricePerKg!;
+        totalPrice = unitPrice * input.quantity;
+        statusMessage = "Preço calculado";
+        break;
+      case "UNAVAILABLE":
+        statusMessage = "Material indisponível nesta faixa de diâmetro para este tipo de medida.";
+        break;
+      case "CONSULT_REQUIRED":
+        statusMessage = "Preço sob consulta. Consulte o fornecedor antes de vender este material.";
+        break;
+    }
   }
 
   return {
@@ -78,13 +93,14 @@ export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalcu
     length: input.length,
     quantity: input.quantity,
     diameterRange,
-    lengthType,
+    commercialType,
+    pricingMode,
     unitWeightKg,
     totalWeightKg,
     pricePerKg,
     unitPrice,
     totalPrice,
     ruleDescription,
-    warning,
+    statusMessage,
   };
 }
