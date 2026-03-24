@@ -34,19 +34,17 @@ describe("Tarugo — Classificação do tipo comercial", () => {
 describe("Tarugo — Cálculo de peso", () => {
   it("calcula peso do Nylon 50mm x 1000mm", () => {
     const weight = calculateTarugoWeightKg(50, 1000, 1.32);
-    // V = PI * 25^2 * 1000 = 1963495.408... mm³
-    // W = 1963495.408 * 1.32 / 1e6 = 2.5918...
     expect(weight).toBeCloseTo(2.5918, 3);
   });
 });
 
-describe("Tarugo — Regras de preço", () => {
+describe("Tarugo — Regras de preço (planilha atualizada)", () => {
   it("NYLON_NATURAL 50mm x 1000mm FIXED_PRICE", () => {
     const result = calculateTarugoPrice({ materialCode: "NYLON_NATURAL", diameter: 50, length: 1000, quantity: 2 });
     expect(result.pricingMode).toBe("FIXED_PRICE");
-    expect(result.pricePerKg).toBe(55);
-    expect(result.unitPrice).toBeCloseTo(2.5918 * 55, 1);
-    expect(result.totalPrice).toBeCloseTo(2.5918 * 55 * 2, 1);
+    expect(result.pricePerKg).toBe(60); // atualizado: era 55, agora 60
+    expect(result.unitPrice).toBeCloseTo(2.5918 * 60, 1);
+    expect(result.totalPrice).toBeCloseTo(2.5918 * 60 * 2, 1);
   });
 
   it("TECAST 10mm x 500mm UNAVAILABLE", () => {
@@ -58,6 +56,12 @@ describe("Tarugo — Regras de preço", () => {
 
   it("TECAST_L 10mm x 1000mm CONSULT_REQUIRED", () => {
     const result = calculateTarugoPrice({ materialCode: "TECAST_L", diameter: 10, length: 1000, quantity: 1 });
+    expect(result.pricingMode).toBe("CONSULT_REQUIRED");
+    expect(result.unitPrice).toBeNull();
+  });
+
+  it("ACRILICO 50mm x 1000mm CONSULT_REQUIRED (novo material)", () => {
+    const result = calculateTarugoPrice({ materialCode: "ACRILICO", diameter: 50, length: 1000, quantity: 1 });
     expect(result.pricingMode).toBe("CONSULT_REQUIRED");
     expect(result.unitPrice).toBeNull();
   });
