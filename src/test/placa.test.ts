@@ -35,7 +35,6 @@ describe("Placa — Seleção do menor padrão", () => {
   });
 
   it("rotaciona peça quando necessário", () => {
-    // Acrílico 30x2000 at 10mm → 1000x2000 pattern (30<=1000, 2000<=2000)
     const { best } = findBestPlatePattern("ACRILICO", 10, 30, 2000);
     expect(best).not.toBeNull();
     expect(best!.rule.standardWidthMm).toBe(1000);
@@ -82,7 +81,7 @@ describe("Placa — PU corta a partir de 3mm", () => {
       quantity: 1,
     });
     expect(result.status).toBe("CALCULATED");
-    expect(result.pricePerKg).toBe(130);
+    expect(result.pricePerKg).toBe(140); // atualizado: era 130, agora 140
   });
 });
 
@@ -100,7 +99,7 @@ describe("Placa — PVC Expandido bloqueado para corte", () => {
   });
 });
 
-describe("Placa — Cálculo de corte", () => {
+describe("Placa — Cálculo de corte (preços atualizados)", () => {
   it("UHMW 1000x2000x8mm", () => {
     const weight = calculatePlateWeightKg(8, 1000, 2000, 0.95);
     expect(weight).toBeCloseTo(15.2, 1);
@@ -114,7 +113,7 @@ describe("Placa — Cálculo de corte", () => {
     });
     expect(result.status).toBe("CALCULATED");
     expect(result.unitWeightKg).toBeCloseTo(15.2, 1);
-    expect(result.totalPrice).toBeCloseTo(1672, 0);
+    expect(result.totalPrice).toBeCloseTo(1672, 0); // 15.2 * 110 = 1672
   });
 
   it("PTFE 500x280x4mm", () => {
@@ -127,7 +126,7 @@ describe("Placa — Cálculo de corte", () => {
       quantity: 1,
     });
     expect(result.status).toBe("CALCULATED");
-    expect(result.totalPrice).toBeCloseTo(296.24, 1);
+    expect(result.totalPrice).toBeCloseTo(296.24, 1); // preço 230 inalterado
   });
 
   it("Acrílico 30x2000x10mm", () => {
@@ -140,7 +139,8 @@ describe("Placa — Cálculo de corte", () => {
       quantity: 1,
     });
     expect(result.status).toBe("CALCULATED");
-    expect(result.totalPrice).toBeCloseTo(60.0, 0);
+    // peso = 10*30*2000*1.25/1e6 = 0.75 kg → 0.75 * 90 = 67.5
+    expect(result.totalPrice).toBeCloseTo(67.5, 0); // atualizado: era 80/kg, agora 90/kg
   });
 });
 
@@ -158,7 +158,7 @@ describe("Placa — PU 510x700x2mm corte bloqueado com sugestão", () => {
     expect(result.suggestedFullSheet).not.toBeNull();
     expect(result.suggestedFullSheet!.standardWidthMm).toBe(1000);
     expect(result.suggestedFullSheet!.standardLengthMm).toBe(1000);
-    expect(result.suggestedFullSheet!.unitPrice).toBeCloseTo(360, 0);
+    expect(result.suggestedFullSheet!.unitPrice).toBeCloseTo(380, 0); // atualizado: 190*2=380 (era 180*2=360)
   });
 });
 
@@ -171,7 +171,7 @@ describe("Placa — Placa inteira", () => {
       mode: "FULL_SHEET",
       materialCode: "NYLON",
       thicknessMm: 10,
-      patternId: "NYLON_1000x2000",
+      patternId: "NYLON_1000x2000_r10",
       quantity: 1,
     });
     expect(result.status).toBe("CALCULATED");
