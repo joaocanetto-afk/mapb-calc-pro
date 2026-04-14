@@ -15,11 +15,12 @@ export interface PricingRule {
   description: string;
 }
 
-type RangeKey = "below20" | "from20to150" | "above150";
+type RangeKey = "below20" | "from20to150" | "from151to200" | "above200";
 const RANGE_MAP: { key: RangeKey; range: DiameterRange; label: string }[] = [
   { key: "below20", range: "ABAIXO_20", label: "abaixo de 20 mm" },
   { key: "from20to150", range: "DE_20_A_150", label: "de 20 a 150 mm" },
-  { key: "above150", range: "ACIMA_150", label: "acima de 150 mm" },
+  { key: "from151to200", range: "DE_151_A_200", label: "de 151 a 200 mm" },
+  { key: "above200", range: "ACIMA_200", label: "acima de 200 mm" },
 ];
 
 function derivePricingRules(): PricingRule[] {
