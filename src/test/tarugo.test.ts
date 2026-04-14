@@ -3,19 +3,24 @@ import { classifyDiameterRange, classifyCommercialType } from "@/utils/classifie
 import { calculateTarugoWeightKg } from "@/services/tarugoCalculator";
 import { calculateTarugoPrice } from "@/services/pricingEngine";
 
-describe("Tarugo — Classificação de diâmetro", () => {
-  it("classifica abaixo de 20", () => {
+describe("Tarugo — Classificação de diâmetro (4 faixas)", () => {
+  it("classifica abaixo de 20 (fronteira 19)", () => {
     expect(classifyDiameterRange(10)).toBe("ABAIXO_20");
-    expect(classifyDiameterRange(15)).toBe("ABAIXO_20");
+    expect(classifyDiameterRange(19)).toBe("ABAIXO_20");
   });
-  it("classifica de 20 a 150", () => {
+  it("classifica de 20 a 150 (fronteiras 20 e 150)", () => {
     expect(classifyDiameterRange(20)).toBe("DE_20_A_150");
     expect(classifyDiameterRange(100)).toBe("DE_20_A_150");
     expect(classifyDiameterRange(150)).toBe("DE_20_A_150");
   });
-  it("classifica acima de 150", () => {
-    expect(classifyDiameterRange(160)).toBe("ACIMA_150");
-    expect(classifyDiameterRange(300)).toBe("ACIMA_150");
+  it("classifica de 151 a 200 (fronteiras 151 e 200)", () => {
+    expect(classifyDiameterRange(151)).toBe("DE_151_A_200");
+    expect(classifyDiameterRange(180)).toBe("DE_151_A_200");
+    expect(classifyDiameterRange(200)).toBe("DE_151_A_200");
+  });
+  it("classifica acima de 200 (fronteira 210)", () => {
+    expect(classifyDiameterRange(210)).toBe("ACIMA_200");
+    expect(classifyDiameterRange(300)).toBe("ACIMA_200");
   });
 });
 
@@ -38,11 +43,11 @@ describe("Tarugo — Cálculo de peso", () => {
   });
 });
 
-describe("Tarugo — Regras de preço (planilha atualizada)", () => {
-  it("NYLON_NATURAL 50mm x 1000mm FIXED_PRICE", () => {
+describe("Tarugo — Regras de preço (planilha atualizada, 4 faixas)", () => {
+  it("NYLON_NATURAL 50mm x 1000mm FIXED_PRICE R$ 60/kg", () => {
     const result = calculateTarugoPrice({ materialCode: "NYLON_NATURAL", diameter: 50, length: 1000, quantity: 2 });
     expect(result.pricingMode).toBe("FIXED_PRICE");
-    expect(result.pricePerKg).toBe(60); // atualizado: era 55, agora 60
+    expect(result.pricePerKg).toBe(60);
     expect(result.unitPrice).toBeCloseTo(2.5918 * 60, 1);
     expect(result.totalPrice).toBeCloseTo(2.5918 * 60 * 2, 1);
   });
@@ -60,9 +65,39 @@ describe("Tarugo — Regras de preço (planilha atualizada)", () => {
     expect(result.unitPrice).toBeNull();
   });
 
-  it("ACRILICO 50mm x 1000mm CONSULT_REQUIRED (novo material)", () => {
+  it("ACRILICO 50mm x 1000mm CONSULT_REQUIRED", () => {
     const result = calculateTarugoPrice({ materialCode: "ACRILICO", diameter: 50, length: 1000, quantity: 1 });
     expect(result.pricingMode).toBe("CONSULT_REQUIRED");
+    expect(result.unitPrice).toBeNull();
+  });
+
+  // Testes obrigatórios: TECAST_L INTEIRO
+  it("TECAST_L INTEIRO 180mm → DE_151_A_200 FIXED_PRICE R$ 180/kg", () => {
+    const result = calculateTarugoPrice({ materialCode: "TECAST_L", diameter: 180, length: 1000, quantity: 1 });
+    expect(result.diameterRange).toBe("DE_151_A_200");
+    expect(result.pricingMode).toBe("FIXED_PRICE");
+    expect(result.pricePerKg).toBe(180);
+  });
+
+  it("TECAST_L INTEIRO 230mm → ACIMA_200 UNAVAILABLE", () => {
+    const result = calculateTarugoPrice({ materialCode: "TECAST_L", diameter: 230, length: 1000, quantity: 1 });
+    expect(result.diameterRange).toBe("ACIMA_200");
+    expect(result.pricingMode).toBe("UNAVAILABLE");
+    expect(result.unitPrice).toBeNull();
+  });
+
+  // Testes obrigatórios: NYLON_66 INTEIRO
+  it("NYLON_66 INTEIRO 180mm → DE_151_A_200 FIXED_PRICE R$ 213/kg", () => {
+    const result = calculateTarugoPrice({ materialCode: "NYLON_66", diameter: 180, length: 1000, quantity: 1 });
+    expect(result.diameterRange).toBe("DE_151_A_200");
+    expect(result.pricingMode).toBe("FIXED_PRICE");
+    expect(result.pricePerKg).toBe(213);
+  });
+
+  it("NYLON_66 INTEIRO 230mm → ACIMA_200 UNAVAILABLE", () => {
+    const result = calculateTarugoPrice({ materialCode: "NYLON_66", diameter: 230, length: 1000, quantity: 1 });
+    expect(result.diameterRange).toBe("ACIMA_200");
+    expect(result.pricingMode).toBe("UNAVAILABLE");
     expect(result.unitPrice).toBeNull();
   });
 });

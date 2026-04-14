@@ -51,7 +51,8 @@ export interface CommercialRodRow {
   commercialType: "INTEIRO" | "CORTE";
   below20: number | string;
   from20to150: number | string;
-  above150: number | string;
+  from151to200: number | string;
+  above200: number | string;
 }
 
 // ──────────────────────────────────────────────
