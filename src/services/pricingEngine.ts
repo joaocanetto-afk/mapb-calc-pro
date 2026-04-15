@@ -2,6 +2,7 @@ import { classifyDiameterRange, classifyCommercialType, type DiameterRange, type
 import { getActivePricingRules, type PricingRule } from "@/data/pricingRules";
 import { getMaterialByCode } from "@/data/materials";
 import { calculateTarugoWeightKg } from "./tarugoCalculator";
+import { isDiameterAllowedForMaterial } from "@/data/rodDiameterRules";
 
 export interface TarugoCalculationInput {
   materialCode: string;
