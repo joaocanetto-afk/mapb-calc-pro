@@ -49,6 +49,10 @@ export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalcu
     throw new Error("Material não encontrado.");
   }
 
+  if (!isDiameterAllowedForMaterial(input.materialCode, input.diameter)) {
+    throw new Error("Este material não possui disponibilidade para o diâmetro informado.");
+  }
+
   const { rule, diameterRange, commercialType } = getApplicablePricingRule(
     input.materialCode,
     input.diameter,
