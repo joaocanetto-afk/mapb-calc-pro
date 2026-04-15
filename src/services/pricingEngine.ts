@@ -2,6 +2,7 @@ import { classifyDiameterRange, classifyCommercialType, type DiameterRange, type
 import { getActivePricingRules, type PricingRule } from "@/data/pricingRules";
 import { getMaterialByCode } from "@/data/materials";
 import { calculateTarugoWeightKg } from "./tarugoCalculator";
+import { isDiameterAllowedForMaterial } from "@/data/rodDiameterRules";
 
 export interface TarugoCalculationInput {
   materialCode: string;
@@ -46,6 +47,10 @@ export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalcu
   const material = getMaterialByCode(input.materialCode);
   if (!material) {
     throw new Error("Material não encontrado.");
+  }
+
+  if (!isDiameterAllowedForMaterial(input.materialCode, input.diameter)) {
+    throw new Error("Este material não possui disponibilidade para o diâmetro informado.");
   }
 
   const { rule, diameterRange, commercialType } = getApplicablePricingRule(

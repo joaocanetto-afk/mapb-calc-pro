@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { getActiveMaterials } from "@/data/materials";
-import { allowedDiameters } from "@/data/allowedDiameters";
+import { getAllowedDiametersForMaterial } from "@/data/rodDiameterRules";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,23 @@ export function TarugoForm({ onCalculate, onClear }: TarugoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const activeMaterials = getActiveMaterials();
+
+  const allowedDiameters = useMemo(
+    () => (materialCode ? getAllowedDiametersForMaterial(materialCode) : []),
+    [materialCode]
+  );
+
+  function handleMaterialChange(code: string) {
+    setMaterialCode(code);
+    setErrors((e) => ({ ...e, materialCode: "" }));
+    // Clear diameter if it's no longer valid for the new material
+    if (diameter) {
+      const newAllowed = getAllowedDiametersForMaterial(code);
+      if (!newAllowed.includes(parseInt(diameter, 10))) {
+        setDiameter("");
+      }
+    }
+  }
 
   function validate(): Record<string, string> {
     const errs: Record<string, string> = {};
@@ -66,7 +83,7 @@ export function TarugoForm({ onCalculate, onClear }: TarugoFormProps) {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="material" className="text-sm font-medium text-foreground">Material</Label>
-        <Select value={materialCode} onValueChange={(v) => { setMaterialCode(v); setErrors((e) => ({ ...e, materialCode: "" })); }}>
+        <Select value={materialCode} onValueChange={handleMaterialChange}>
           <SelectTrigger id="material" className="h-11">
             <SelectValue placeholder="Selecione o material" />
           </SelectTrigger>
@@ -81,9 +98,13 @@ export function TarugoForm({ onCalculate, onClear }: TarugoFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="diameter" className="text-sm font-medium text-foreground">Diâmetro (mm)</Label>
-        <Select value={diameter} onValueChange={(v) => { setDiameter(v); setErrors((e) => ({ ...e, diameter: "" })); }}>
+        <Select
+          value={diameter}
+          onValueChange={(v) => { setDiameter(v); setErrors((e) => ({ ...e, diameter: "" })); }}
+          disabled={!materialCode}
+        >
           <SelectTrigger id="diameter" className="h-11">
-            <SelectValue placeholder="Selecione o diâmetro" />
+            <SelectValue placeholder={materialCode ? "Selecione o diâmetro" : "Selecione o material primeiro"} />
           </SelectTrigger>
           <SelectContent>
             {allowedDiameters.map((d) => (

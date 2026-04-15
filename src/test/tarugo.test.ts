@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { classifyDiameterRange, classifyCommercialType } from "@/utils/classifiers";
 import { calculateTarugoWeightKg } from "@/services/tarugoCalculator";
 import { calculateTarugoPrice } from "@/services/pricingEngine";
+import { getAllowedDiametersForMaterial, isDiameterAllowedForMaterial } from "@/data/rodDiameterRules";
 
 describe("Tarugo — Classificação de diâmetro (4 faixas)", () => {
   it("classifica abaixo de 20 (fronteira 19)", () => {
@@ -43,6 +44,49 @@ describe("Tarugo — Cálculo de peso", () => {
   });
 });
 
+describe("Tarugo — Disponibilidade de diâmetros por material", () => {
+  it("TECAST aceita 320 e 500", () => {
+    expect(isDiameterAllowedForMaterial("TECAST", 320)).toBe(true);
+    expect(isDiameterAllowedForMaterial("TECAST", 500)).toBe(true);
+  });
+  it("TECAST aceita 300 (base)", () => {
+    expect(isDiameterAllowedForMaterial("TECAST", 300)).toBe(true);
+  });
+  it("NYLON_NATURAL não aceita 320", () => {
+    expect(isDiameterAllowedForMaterial("NYLON_NATURAL", 320)).toBe(false);
+  });
+  it("PVC não aceita 350", () => {
+    expect(isDiameterAllowedForMaterial("PVC", 350)).toBe(false);
+  });
+  it("UHMW não aceita 400", () => {
+    expect(isDiameterAllowedForMaterial("UHMW", 400)).toBe(false);
+  });
+  it("materiais comuns aceitam 300", () => {
+    expect(isDiameterAllowedForMaterial("NYLON_NATURAL", 300)).toBe(true);
+    expect(isDiameterAllowedForMaterial("PVC", 300)).toBe(true);
+    expect(isDiameterAllowedForMaterial("POLIACETAL_NATURAL", 300)).toBe(true);
+  });
+  it("TECAST retorna 41 diâmetros, outros retornam 36", () => {
+    expect(getAllowedDiametersForMaterial("TECAST").length).toBe(41);
+    expect(getAllowedDiametersForMaterial("NYLON_NATURAL").length).toBe(36);
+  });
+});
+
+describe("Tarugo — Engine rejeita diâmetro inválido para material", () => {
+  it("NYLON_NATURAL + 320mm lança erro", () => {
+    expect(() => calculateTarugoPrice({ materialCode: "NYLON_NATURAL", diameter: 320, length: 1000, quantity: 1 }))
+      .toThrow("Este material não possui disponibilidade para o diâmetro informado.");
+  });
+  it("PVC + 350mm lança erro", () => {
+    expect(() => calculateTarugoPrice({ materialCode: "PVC", diameter: 350, length: 500, quantity: 1 }))
+      .toThrow("Este material não possui disponibilidade para o diâmetro informado.");
+  });
+  it("TECAST + 320mm não lança erro", () => {
+    expect(() => calculateTarugoPrice({ materialCode: "TECAST", diameter: 320, length: 1000, quantity: 1 }))
+      .not.toThrow();
+  });
+});
+
 describe("Tarugo — Regras de preço (planilha atualizada, 4 faixas)", () => {
   it("NYLON_NATURAL 50mm x 1000mm FIXED_PRICE R$ 60/kg", () => {
     const result = calculateTarugoPrice({ materialCode: "NYLON_NATURAL", diameter: 50, length: 1000, quantity: 2 });
@@ -72,7 +116,6 @@ describe("Tarugo — Regras de preço (planilha atualizada, 4 faixas)", () => {
     expect(result.unitPrice).toBeNull();
   });
 
-  // Testes obrigatórios: TECAST_L INTEIRO
   it("TECAST_L INTEIRO 180mm → DE_151_A_200 FIXED_PRICE R$ 180/kg", () => {
     const result = calculateTarugoPrice({ materialCode: "TECAST_L", diameter: 180, length: 1000, quantity: 1 });
     expect(result.diameterRange).toBe("DE_151_A_200");
@@ -87,7 +130,6 @@ describe("Tarugo — Regras de preço (planilha atualizada, 4 faixas)", () => {
     expect(result.unitPrice).toBeNull();
   });
 
-  // Testes obrigatórios: NYLON_66 INTEIRO
   it("NYLON_66 INTEIRO 180mm → DE_151_A_200 FIXED_PRICE R$ 212.75/kg", () => {
     const result = calculateTarugoPrice({ materialCode: "NYLON_66", diameter: 180, length: 1000, quantity: 1 });
     expect(result.diameterRange).toBe("DE_151_A_200");
