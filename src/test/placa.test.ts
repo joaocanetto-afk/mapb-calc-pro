@@ -139,8 +139,8 @@ describe("Placa — Cálculo de corte (preços atualizados)", () => {
       quantity: 1,
     });
     expect(result.status).toBe("CALCULATED");
-    // peso = 10*30*2000*1.25/1e6 = 0.75 kg → 0.75 * 90 = 67.5
-    expect(result.totalPrice).toBeCloseTo(67.5, 0); // atualizado: era 80/kg, agora 90/kg
+    // peso = 10*30*2000*1.25/1e6 = 0.75 kg → 0.75 * 100 = 75
+    expect(result.totalPrice).toBeCloseTo(75, 0);
   });
 });
 
