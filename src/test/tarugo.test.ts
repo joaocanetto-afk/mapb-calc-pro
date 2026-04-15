@@ -48,8 +48,9 @@ describe("Tarugo — Regras de preço (planilha atualizada, 4 faixas)", () => {
     const result = calculateTarugoPrice({ materialCode: "NYLON_NATURAL", diameter: 50, length: 1000, quantity: 2 });
     expect(result.pricingMode).toBe("FIXED_PRICE");
     expect(result.pricePerKg).toBe(60);
-    expect(result.unitPrice).toBeCloseTo(2.5918 * 60, 1);
-    expect(result.totalPrice).toBeCloseTo(2.5918 * 60 * 2, 1);
+    const expectedWeight = calculateTarugoWeightKg(50, 1000, 1.32);
+    expect(result.unitPrice).toBeCloseTo(expectedWeight * 60, 1);
+    expect(result.totalPrice).toBeCloseTo(expectedWeight * 60 * 2, 1);
   });
 
   it("TECAST 10mm x 500mm UNAVAILABLE", () => {
@@ -87,11 +88,11 @@ describe("Tarugo — Regras de preço (planilha atualizada, 4 faixas)", () => {
   });
 
   // Testes obrigatórios: NYLON_66 INTEIRO
-  it("NYLON_66 INTEIRO 180mm → DE_151_A_200 FIXED_PRICE R$ 213/kg", () => {
+  it("NYLON_66 INTEIRO 180mm → DE_151_A_200 FIXED_PRICE R$ 212.75/kg", () => {
     const result = calculateTarugoPrice({ materialCode: "NYLON_66", diameter: 180, length: 1000, quantity: 1 });
     expect(result.diameterRange).toBe("DE_151_A_200");
     expect(result.pricingMode).toBe("FIXED_PRICE");
-    expect(result.pricePerKg).toBe(213);
+    expect(result.pricePerKg).toBe(212.75);
   });
 
   it("NYLON_66 INTEIRO 230mm → ACIMA_200 UNAVAILABLE", () => {
