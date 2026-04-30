@@ -172,6 +172,10 @@ function makeEmpty(
     appliedRuleDescription: null,
     availablePatterns: [],
     suggestedFullSheet: null,
+    calculatedUnitPriceBeforeMinimum: null,
+    calculatedTotalPriceBeforeMinimum: null,
+    minimumPriceApplied: false,
+    minimumUnitPrice: null,
     ...extras,
   };
 }
