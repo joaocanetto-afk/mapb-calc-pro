@@ -1,7 +1,7 @@
 import type { TarugoCalculationResult } from "@/services/pricingEngine";
 import { formatBRL, formatWeight, formatMm, formatDensity } from "@/utils/formatters";
 import { diameterRangeLabels, commercialTypeLabels } from "@/utils/classifiers";
-import { AlertTriangle, CheckCircle2, Ban, HelpCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Ban, HelpCircle, Info } from "lucide-react";
 
 interface TarugoResultProps {
   result: TarugoCalculationResult;
