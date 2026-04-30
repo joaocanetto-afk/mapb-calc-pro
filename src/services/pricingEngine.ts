@@ -3,6 +3,7 @@ import { getActivePricingRules, type PricingRule } from "@/data/pricingRules";
 import { getMaterialByCode } from "@/data/materials";
 import { calculateTarugoWeightKg } from "./tarugoCalculator";
 import { isDiameterAllowedForMaterial } from "@/data/rodDiameterRules";
+import { applyMinimumCutUnitPrice } from "@/utils/minimumPricing";
 
 export interface TarugoCalculationInput {
   materialCode: string;
@@ -27,6 +28,10 @@ export interface TarugoCalculationResult {
   totalPrice: number | null;
   ruleDescription: string | null;
   statusMessage: string;
+  calculatedUnitPriceBeforeMinimum: number | null;
+  calculatedTotalPriceBeforeMinimum: number | null;
+  minimumPriceApplied: boolean;
+  minimumUnitPrice: number | null;
 }
 
 export function getApplicablePricingRule(
@@ -68,6 +73,10 @@ export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalcu
   let ruleDescription: string | null = null;
   let pricingMode: PricingMode | null = null;
   let statusMessage: string;
+  let calculatedUnitPriceBeforeMinimum: number | null = null;
+  let calculatedTotalPriceBeforeMinimum: number | null = null;
+  let minimumPriceApplied = false;
+  let minimumUnitPrice: number | null = null;
 
   if (!rule) {
     statusMessage = "Preço não cadastrado para esta combinação.";
@@ -76,12 +85,25 @@ export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalcu
     ruleDescription = rule.description;
 
     switch (rule.pricingMode) {
-      case "FIXED_PRICE":
+      case "FIXED_PRICE": {
         pricePerKg = rule.pricePerKg;
-        unitPrice = unitWeightKg * pricePerKg!;
-        totalPrice = unitPrice * input.quantity;
-        statusMessage = "Preço calculado";
+        const calculatedUnit = unitWeightKg * pricePerKg!;
+        const minimumResult = applyMinimumCutUnitPrice(
+          calculatedUnit,
+          input.quantity,
+          commercialType === "CORTE"
+        );
+        unitPrice = minimumResult.finalUnitPrice;
+        totalPrice = minimumResult.finalTotalPrice;
+        calculatedUnitPriceBeforeMinimum = minimumResult.calculatedUnitPriceBeforeMinimum;
+        calculatedTotalPriceBeforeMinimum = minimumResult.calculatedTotalPriceBeforeMinimum;
+        minimumPriceApplied = minimumResult.minimumPriceApplied;
+        minimumUnitPrice = minimumResult.minimumUnitPrice;
+        statusMessage = minimumResult.minimumPriceApplied
+          ? "Preço mínimo de corte aplicado"
+          : "Preço calculado";
         break;
+      }
       case "UNAVAILABLE":
         statusMessage = "Material indisponível nesta faixa de diâmetro para este tipo de medida.";
         break;
@@ -107,5 +129,9 @@ export function calculateTarugoPrice(input: TarugoCalculationInput): TarugoCalcu
     totalPrice,
     ruleDescription,
     statusMessage,
+    calculatedUnitPriceBeforeMinimum,
+    calculatedTotalPriceBeforeMinimum,
+    minimumPriceApplied,
+    minimumUnitPrice,
   };
 }
