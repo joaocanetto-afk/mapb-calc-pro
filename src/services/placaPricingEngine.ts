@@ -252,6 +252,10 @@ export function calculatePlateQuote(
       appliedRuleDescription: `${name}, placa inteira ${rule.standardWidthMm}×${rule.standardLengthMm} mm, ${input.thicknessMm} mm`,
       availablePatterns,
       suggestedFullSheet: null,
+      calculatedUnitPriceBeforeMinimum: unitPrice,
+      calculatedTotalPriceBeforeMinimum: totalPrice,
+      minimumPriceApplied: false,
+      minimumUnitPrice: null,
     };
   }
 
