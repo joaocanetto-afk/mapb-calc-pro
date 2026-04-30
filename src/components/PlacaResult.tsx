@@ -142,9 +142,29 @@ export function PlacaResult({ result }: PlacaResultProps) {
           </div>
 
           <hr className="border-border" />
+
+          {result.minimumPriceApplied && (
+            <div className="flex items-start gap-3 rounded-lg bg-warning/10 border border-warning/30 p-4">
+              <Info className="h-5 w-5 text-warning mt-0.5 shrink-0" />
+              <p className="text-sm font-medium text-warning-foreground">
+                Preço mínimo de corte aplicado. O valor calculado ficou abaixo de {formatBRL(result.minimumUnitPrice!)} por peça, portanto o orçamento foi ajustado para o mínimo comercial.
+              </p>
+            </div>
+          )}
+
           <div className="rounded-lg bg-accent p-4">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-accent-foreground/70 mb-3">Total</h4>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {result.minimumPriceApplied && (
+                <>
+                  <span className="text-sm text-accent-foreground/70">Valor unitário calculado</span>
+                  <span className="text-sm font-medium text-accent-foreground line-through">{formatBRL(result.calculatedUnitPriceBeforeMinimum!)}</span>
+                  <span className="text-sm text-accent-foreground/70">Valor total calculado</span>
+                  <span className="text-sm font-medium text-accent-foreground line-through">{formatBRL(result.calculatedTotalPriceBeforeMinimum!)}</span>
+                  <span className="text-sm text-accent-foreground/70">Mínimo de corte por peça</span>
+                  <span className="text-sm font-medium text-accent-foreground">{formatBRL(result.minimumUnitPrice!)}</span>
+                </>
+              )}
               <span className="text-sm text-accent-foreground/70">Valor unitário</span>
               <span className="text-sm font-bold text-accent-foreground">{formatBRL(result.unitPrice!)}</span>
               <span className="text-sm text-accent-foreground/70">Valor total</span>

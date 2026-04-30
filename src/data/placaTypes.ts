@@ -75,4 +75,8 @@ export interface PlateCalculationResult {
   appliedRuleDescription: string | null;
   availablePatterns: PatternOption[];
   suggestedFullSheet: SuggestedFullSheet | null;
+  calculatedUnitPriceBeforeMinimum: number | null;
+  calculatedTotalPriceBeforeMinimum: number | null;
+  minimumPriceApplied: boolean;
+  minimumUnitPrice: number | null;
 }

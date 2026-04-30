@@ -17,6 +17,7 @@ import {
   calculateFullSheetPrice,
   calculatePlateCutPrice,
 } from "./placaCalculator";
+import { applyMinimumCutUnitPrice } from "@/utils/minimumPricing";
 
 // ──────────────────────────────────────────────
 // Seleção do menor padrão compatível para corte
@@ -171,6 +172,10 @@ function makeEmpty(
     appliedRuleDescription: null,
     availablePatterns: [],
     suggestedFullSheet: null,
+    calculatedUnitPriceBeforeMinimum: null,
+    calculatedTotalPriceBeforeMinimum: null,
+    minimumPriceApplied: false,
+    minimumUnitPrice: null,
     ...extras,
   };
 }
@@ -247,6 +252,10 @@ export function calculatePlateQuote(
       appliedRuleDescription: `${name}, placa inteira ${rule.standardWidthMm}×${rule.standardLengthMm} mm, ${input.thicknessMm} mm`,
       availablePatterns,
       suggestedFullSheet: null,
+      calculatedUnitPriceBeforeMinimum: unitPrice,
+      calculatedTotalPriceBeforeMinimum: totalPrice,
+      minimumPriceApplied: false,
+      minimumUnitPrice: null,
     };
   }
 
@@ -367,8 +376,10 @@ function buildCutResult(
   const unitWeightKg = calculatePlateWeightKg(input.thicknessMm, widthMm, lengthMm, density);
   const totalWeightKg = unitWeightKg * input.quantity;
   const pricePerKg = rule.cutPricePerKg!;
-  const unitPrice = calculatePlateCutPrice(unitWeightKg, pricePerKg);
-  const totalPrice = unitPrice * input.quantity;
+  const calculatedUnitPrice = calculatePlateCutPrice(unitWeightKg, pricePerKg);
+  const minimumResult = applyMinimumCutUnitPrice(calculatedUnitPrice, input.quantity, true);
+  const unitPrice = minimumResult.finalUnitPrice;
+  const totalPrice = minimumResult.finalTotalPrice;
 
   return {
     mode: "CUT",
@@ -389,9 +400,16 @@ function buildCutResult(
     unitPrice,
     totalPrice,
     status: "CALCULATED",
-    statusMessage: "Preço calculado",
+    statusMessage: minimumResult.minimumPriceApplied
+      ? "Preço mínimo de corte aplicado"
+      : "Preço calculado",
     appliedRuleDescription: `${name}, corte, padrão ${rule.standardWidthMm}×${rule.standardLengthMm} mm, ${input.thicknessMm} mm`,
     availablePatterns,
     suggestedFullSheet: null,
+    calculatedUnitPriceBeforeMinimum: minimumResult.calculatedUnitPriceBeforeMinimum,
+    calculatedTotalPriceBeforeMinimum: minimumResult.calculatedTotalPriceBeforeMinimum,
+    minimumPriceApplied: minimumResult.minimumPriceApplied,
+    minimumUnitPrice: minimumResult.minimumUnitPrice,
   };
 }
+
