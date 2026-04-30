@@ -17,6 +17,7 @@ import {
   calculateFullSheetPrice,
   calculatePlateCutPrice,
 } from "./placaCalculator";
+import { applyMinimumCutUnitPrice } from "@/utils/minimumPricing";
 
 // ──────────────────────────────────────────────
 // Seleção do menor padrão compatível para corte
